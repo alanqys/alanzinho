@@ -10,10 +10,6 @@ app = Flask('')
 def home():
     return "Bot Polymarket Copa 2026 ativo e rodando!"
 
-def run_flask():
-    # O Render exige que o script escute em uma porta (geralmente 10000)
-    app.run(host='0.0.0.0', port=10000)
-
 # --- SEU CÓDIGO DO ROBÔ ---
 TOKEN = "8543455492:AAGDehwxwgwkUlCxu-mn2wD6PsMsGeaMr_c"
 CHAT_ID = "-1004332406435"
@@ -66,7 +62,7 @@ def pertence_a_copa(titulo_mercado):
     return any(termo in texto for termo in TERMOS_COPA)
 
 def checar_trades():
-    print(f"\n⚽ Varrendo baleias (Filtro: Copa do Mundo | Mínimo: ${VALOR_MINIMO_INVESTIDO:,.0f})...")
+    print(f"\n⚽ Varrendo baleias (Filtro: Copa do Mundo | Mínimo: ${VALOR_MINIMO_INVESTIDO:,.0f})...", flush=True)
     sessao = requests.Session()
     sessao.headers.update({"User-Agent": "Mozilla/5.0"})
     
@@ -114,6 +110,7 @@ def checar_trades():
                             f"🔗 [Ver no Polymarket](https://polymarket.com/profile/{carteira})"
                         )
                         
+                        print(f"🎯 Forte entrada detectada (${investido:,.2f})! Enviando Telegram...", flush=True)
                         enviar_telegram(mensagem)
                         ultimas_trades_enviadas[carteira] = trade_id
                         
@@ -124,17 +121,19 @@ def checar_trades():
         time.sleep(3)
 
 def loop_principal():
-    print("🚀 Loop de monitoramento iniciado em background!")
+    print("🚀 Loop de monitoramento iniciado em background!", flush=True)
     while True:
         checar_trades()
+        print("💤 Aguardando próxima rodada de monitoramento...", flush=True)
         time.sleep(120)
 
-# --- INICIALIZAÇÃO MULTI-THREADING ---
+# --- INICIALIZAÇÃO CORRETA E INVERTIDA PARA O RENDER ---
 if __name__ == "__main__":
-    # Inicia o robô em segundo plano
+    # 1. Força o robô de monitoramento a começar em segundo plano primeiro
     t = threading.Thread(target=loop_principal)
     t.daemon = True
     t.start()
     
-    # Inicia o servidor web na thread principal para o Render manter vivo
-    run_flask()
+    # 2. Inicia o servidor Flask por último para segurar o processo do Render ativo
+    print("🌍 Iniciando servidor Flask de contingência na porta 10000...", flush=True)
+    app.run(host='0.0.0.0', port=10000)
